@@ -22,6 +22,7 @@ import com.stripe.stripeterminal.external.callable.ReaderCallback;
 import com.stripe.stripeterminal.external.callable.BluetoothReaderListener;
 import com.stripe.stripeterminal.external.callable.ReaderSoftwareUpdateCallback;
 import com.stripe.stripeterminal.external.callable.TerminalListener;
+import com.stripe.stripeterminal.external.callable.BluetoothReaderReconnectionListener;
 import com.stripe.stripeterminal.external.models.SimulateReaderUpdate;
 import com.stripe.stripeterminal.external.models.SimulatedCard;
 import com.stripe.stripeterminal.external.models.SimulatedCardType;
@@ -682,7 +683,29 @@ public class RNStripeTerminalModule extends ReactContextBaseJavaModule implement
         }
 
         if (selectedReader != null) {
-            BluetoothConnectionConfiguration config = new BluetoothConnectionConfiguration(locationId);
+            // BluetoothConnectionConfiguration config = new BluetoothConnectionConfiguration(locationId);
+            BluetoothConnectionConfiguration config = new BluetoothConnectionConfiguration(locationId, true, new BluetoothReaderReconnectionListener() {
+                @Override
+                public void onReaderReconnectStarted(@NonNull Cancelable cancelReconnect) {
+                    // 1. Notified at the start of a reconnection attempt
+                    // Use cancelable to stop reconnection at any time
+                    sendEventWithName(EVENT_READER_RECONNECTION_STARTED);
+                }
+            
+                @Override
+                public void onReaderReconnectSucceeded() {
+                    // 2. Notified when reader reconnection succeeds
+                    // App is now connected
+                    sendEventWithName(EVENT_READER_RECONNECTION_SUCCEEDED);
+                }
+            
+                @Override
+                public void onReaderReconnectFailed(@NonNull Reader reader) {
+                    // 3. Notified when reader reconnection fails
+                    // App is now disconnected
+                    sendEventWithName(EVENT_READER_RECONNECTION_FAILED, serializeReader(reader));
+                }
+            });
             Terminal.getInstance().connectBluetoothReader(selectedReader, config, this, new ReaderCallback() {
                 @Override
                 public void onSuccess(@Nonnull Reader reader) {

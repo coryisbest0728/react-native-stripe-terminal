@@ -87,6 +87,9 @@ class StripeTerminal {
       "didStartInstallingUpdate",
       "didReportReaderSoftwareUpdateProgress",
       "didFinishInstallingUpdate",
+      "readerReconnectStarted",
+      "readerReconnectSucceeded",
+      "readerReconnectFailed"
     ]);
   }
 
